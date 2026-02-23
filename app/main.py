@@ -5,11 +5,18 @@ from app.schemas import DailyEntryCreate, DailyEntryRead, DailyEntryEdit, Summar
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 import app.services as services
-
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI(title="Personal Data Dashboard (V1)")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 Base.metadata.create_all(bind=engine)
 @app.get("/")
 def root():
