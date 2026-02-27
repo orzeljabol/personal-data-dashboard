@@ -30,3 +30,42 @@ button:hover {
   background: #2a2a2a;
   color: white;
 }
+.entry-form{
+  margin-top: 20px;
+  padding: 20px;
+  background: #1e1e1e;
+  border-radius: 10px;
+  max-width: 800px;
+}
+.row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.entry-form input,
+.entry-form textarea {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #2a2a2a;
+  color: white;
+}
+.entry-form textarea {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.checkbox {
+  gap: 20px;
+}
+.entry-form button {
+  margin-top: 10px;
+  background: #5a4bff;
+  border: none;
+  padding: 10px 16px;
+  color: white;
+  cursor: pointer;
+}
+.entry-form button:hover {
+  background: #6b5cff;
+}
