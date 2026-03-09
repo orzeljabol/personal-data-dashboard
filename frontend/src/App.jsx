@@ -9,6 +9,8 @@ function toNumberOrNull(value) {
 }
 function App() {
   const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(null);
   const [editing, setEditing] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [error, setError] = useState("");
@@ -22,6 +24,9 @@ function App() {
   stimulation_minutes: "Stimulation minutes must be valid",
   litres_water: "Litres of water must be valid",
 };
+function formatNumbers(value){
+  return value !== null && value !== undefined ? Number(value).toFixed(2) : "-";
+}
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
     sleep_hours: "",
@@ -278,6 +283,23 @@ async function deleteEntry(entryId) {
 }
   setEntries((prev) => prev.filter(e => e.id !== entryId));
 }
+async function showSummary() {
+  const res = await fetch(`${API}/entries/summary/7days`);
+  const data = await res.json();
+  if (!res.ok) {
+    let message = "Could not load summary.";
+    if (res.status === 404) {
+      message = "No entries found for the last 7 days.";
+    }
+    else if (res.status === 500) {
+      message = "Server error. Please try again later.";
+    }
+
+    setError(message);
+    return;
+  }
+  setSummary(data ? [data] : []);
+}
   useEffect(() => {
     loadEntries();
   }, []);
@@ -286,10 +308,23 @@ async function deleteEntry(entryId) {
     <div className="container">
       <h1>Personal Dashboard</h1>
       <button onClick={() => setShowForm(prev => !prev)}>{showForm ? "Close":"New"}</button>
-      <button onClick={function(){}}>Statsistics</button>
+      <button onClick={showSummary}>Statsistics</button>
       <button onClick={loadEntries}>Reload</button>
       <button onClick={function(){}}>Log out</button>
       {error && <div className="error-box">{error}</div>}
+      {summary && (
+        summary.map((item,index) => (
+          <div key={index} className="summary-card">
+            <p><b>Avg Mood:</b> {formatNumbers(item.average_mood)}</p>
+            <p><b>Avg Energy:</b> {formatNumbers(item.average_energy)}</p>
+            <p><b>Avg Sleep [h]:</b> {formatNumbers(item.average_sleep_hours)}</p>
+            <p><b>Avg Water [l]:</b> {formatNumbers(item.average_litres_water)}</p>
+            <p><b>Total Deep Work [min]:</b> {Math.round(formatNumbers(item.total_deep_work_minutes))}</p>
+            <p><b>Total Exercise [min]:</b> {Math.round(formatNumbers(item.total_exercise_minutes))}</p>
+            <p><b>Total Stimulation [min]:</b> {Math.round(formatNumbers(item.total_stimulation_minutes))}</p>
+          </div>
+        ))
+      )} 
       {showForm && (<div className="entry-form">
       <h2>New Entry</h2>
       <div className="row">
@@ -549,6 +584,7 @@ async function deleteEntry(entryId) {
       ))}
     </div>
   );
+  
 }
 
 export default App;

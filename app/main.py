@@ -85,18 +85,22 @@ def delete_entry_by_date(entry_date: date, db: Session = Depends(get_db)):
     db.delete(entry)
     db.commit()
     return 
-@app.get("/api/summary", response_model=Summary7Days)
+@app.get("/api/entries/summary/7days", response_model=Summary7Days)
 def get_last_7_days_summary(db: Session = Depends(get_db)):
 
+    entries = services.get_last_7_days_entries(db)
+    if not entries:
+        raise HTTPException(status_code=404, detail="No entries found for the last 7 days")
+
     return Summary7Days(
-        average_sleep_hours=services.calculate_average_sleep_hours(db),
-        average_mood=services.calculate_average_mood(db),
-        average_energy=services.calculate_average_energy(db),
-        total_deep_work_minutes=services.calculate_total_deep_work_minutes(db),
-        average_deep_work_minutes=services.calculate_average_deep_work_minutes(db),
-        total_exercise_minutes=services.calculate_total_exercise_minutes(db),
-        average_exercise_minutes=services.calculate_average_exercise_minutes(db),
-        total_stimulation_minutes=services.calculate_total_stimulation_minutes(db),
-        average_stimulation_minutes=services.calculate_average_stimulation_minutes(db),
-        average_litres_water=services.calculate_average_litres_water(db)
+        average_sleep_hours=services.calculate_average_sleep_hours(entries),
+        average_mood=services.calculate_average_mood(entries),
+        average_energy=services.calculate_average_energy(entries),
+        total_deep_work_minutes=services.calculate_total_deep_work_minutes(entries),
+        average_deep_work_minutes=services.calculate_average_deep_work_minutes(entries),
+        total_exercise_minutes=services.calculate_total_exercise_minutes(entries),
+        average_exercise_minutes=services.calculate_average_exercise_minutes(entries),
+        total_stimulation_minutes=services.calculate_total_stimulation_minutes(entries),
+        average_stimulation_minutes=services.calculate_average_stimulation_minutes(entries),
+        average_litres_water=services.calculate_average_litres_water(entries),
     )
