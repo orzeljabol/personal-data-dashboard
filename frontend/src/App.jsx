@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-
+import { FaBed, FaBolt, FaSmile, FaDumbbell, FaTint, FaBrain } from "react-icons/fa";
+import { IoHourglass } from "react-icons/io5";
 
 
 const API = "http://127.0.0.1:8001/api";
@@ -315,13 +316,13 @@ async function showSummary() {
       {summary && (
         summary.map((item,index) => (
           <div key={index} className="summary-card">
-            <p><b>Avg Mood:</b> {formatNumbers(item.average_mood)}</p>
-            <p><b>Avg Energy:</b> {formatNumbers(item.average_energy)}</p>
-            <p><b>Avg Sleep [h]:</b> {formatNumbers(item.average_sleep_hours)}</p>
-            <p><b>Avg Water [l]:</b> {formatNumbers(item.average_litres_water)}</p>
-            <p><b>Total Deep Work [min]:</b> {Math.round(formatNumbers(item.total_deep_work_minutes))}</p>
-            <p><b>Total Exercise [min]:</b> {Math.round(formatNumbers(item.total_exercise_minutes))}</p>
-            <p><b>Total Stimulation [min]:</b> {Math.round(formatNumbers(item.total_stimulation_minutes))}</p>
+            <p><FaSmile /> <b>Avg Mood:</b> {formatNumbers(item.average_mood)}</p>
+            <p><FaBolt /> <b>Avg Energy:</b> {formatNumbers(item.average_energy)}</p>
+            <p><FaBed /> <b>Avg Sleep [h]:</b> {formatNumbers(item.average_sleep_hours)}</p>
+            <p><FaTint /> <b>Avg Water [l]:</b> {formatNumbers(item.average_litres_water)}</p>
+            <p><FaBrain /> <b>Total Deep Work [min]:</b> {Math.round(formatNumbers(item.total_deep_work_minutes))}</p>
+            <p><FaDumbbell /> <b>Total Exercise [min]:</b> {Math.round(formatNumbers(item.total_exercise_minutes))}</p>
+            <p><IoHourglass /><b>Total Stimulation [min]:</b> {Math.round(formatNumbers(item.total_stimulation_minutes))}</p>
           </div>
         ))
       )} 
