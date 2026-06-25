@@ -309,9 +309,8 @@ async function showSummary() {
     <div className="container">
       <h1>Personal Dashboard</h1>
       <button onClick={() => setShowForm(prev => !prev)}>{showForm ? "Close":"New"}</button>
-      <button onClick={showSummary}>Statsistics</button>
+      <button onClick={showSummary}>Statistics</button>
       <button onClick={loadEntries}>Reload</button>
-      <button onClick={function(){}}>Log out</button>
       {error && <div className="error-box">{error}</div>}
       {summary && (
         summary.map((item,index) => (
