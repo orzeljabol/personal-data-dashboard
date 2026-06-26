@@ -56,9 +56,20 @@ function formatNumbers(value){
   }));
   }
   async function loadEntries() {
-    const res = await fetch(`${API}/entries`);
-    const data = await res.json();
-    setEntries(data);
+    try {
+      setLoading(true);
+      setError("");
+      const res = await fetch(`${API}/entries`);
+      if (!res.ok) {
+        throw new Error("Failed to load entries");
+      }
+      const data = await res.json();
+      setEntries(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
   async function createEntry() {
     if (Number(form.mood) < 1 || Number(form.mood) > 10) {
@@ -312,6 +323,10 @@ async function showSummary() {
       <button onClick={showSummary}>Statistics</button>
       <button onClick={loadEntries}>Reload</button>
       {error && <div className="error-box">{error}</div>}
+      {loading && <p>Loading entries...</p>}
+      {!loading && entries.length === 0 && (
+        <p>No entries yet. Create your first daily entry.</p>
+      )}
       {summary && (
         summary.map((item,index) => (
           <div key={index} className="summary-card">
@@ -562,7 +577,7 @@ async function showSummary() {
   </div>
 )}
 
-      {entries.map(entry => (
+      {!loading && entries.map(entry => (
         <div key={entry.id} className="card">
           <div style={{display: "flex", gap: 8 }}>
             <button onClick={() => startEdit(entry)}>Edit</button>
