@@ -262,23 +262,6 @@ async function deleteEntry(entryId) {
     method: "DELETE",
   });
   if (!res.ok) {
-  const data = await res.json().catch(() => null);
-
-  if (data?.detail && Array.isArray(data.detail)) {
-    const errors = {};
-    const messages = [];
-
-    data.detail.forEach((err) => {
-      const field = err.loc?.[1];
-      if (field) {
-        errors[field] = err.msg;
-        messages.push(friendly[field] || err.msg);
-      }
-    });
-
-    setFieldErrors(errors);
-    setError(messages.join(" | "));
-  } else {
       let message = "Could not delete entry.";
       if (res.status === 404) {
         message = "Entry not found.";
@@ -286,13 +269,12 @@ async function deleteEntry(entryId) {
       else if (res.status === 500) {
         message = "Server error. Please try again later.";
       }
-
       setError(message);
       setFieldErrors({});
-  }
+  
 
-  return;
-}
+      return;
+  }
   setEntries((prev) => prev.filter(e => e.id !== entryId));
 }
 async function showSummary() {
