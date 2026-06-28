@@ -16,6 +16,10 @@ function App() {
   const [editForm, setEditForm] = useState({});
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const [filters, setFilters] = useState({
+    start_date: "",
+    end_date: "",
+  });
   const friendly = {
   mood: "Mood must be between 1 and 10",
   energy: "Energy must be between 1 and 10",
@@ -55,22 +59,40 @@ function formatNumbers(value){
     [e.target.name]: undefined
   }));
   }
-  async function loadEntries() {
-    try {
-      setLoading(true);
-      setError("");
-      const res = await fetch(`${API}/entries`);
-      if (!res.ok) {
-        throw new Error("Failed to load entries");
-      }
-      const data = await res.json();
-      setEntries(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+async function loadEntries() {
+  try {
+    setLoading(true);
+    setError("");
+
+    const params = new URLSearchParams();
+
+    if (filters.start_date) {
+      params.append("start_date", filters.start_date);
     }
+
+    if (filters.end_date) {
+      params.append("end_date", filters.end_date);
+    }
+
+    const queryString = params.toString();
+    const url = queryString
+      ? `${API}/entries?${queryString}`
+      : `${API}/entries`;
+
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      throw new Error("Could not load entries.");
+    }
+
+    const data = await res.json();
+    setEntries(data);
+  } catch (err) {
+    setError("Could not load entries. Check if the backend is running or filters are valid.");
+  } finally {
+    setLoading(false);
   }
+}
   async function createEntry() {
     if (Number(form.mood) < 1 || Number(form.mood) > 10) {
       setError("Mood must be between 1 and 10");
@@ -304,6 +326,33 @@ async function showSummary() {
       <button onClick={() => setShowForm(prev => !prev)}>{showForm ? "Close":"New"}</button>
       <button onClick={showSummary}>Statistics</button>
       <button onClick={loadEntries}>Reload</button>
+      <div className="filters">
+        <input
+          type="date"
+          value={filters.start_date}
+          onChange={(e) =>
+            setFilters({ ...filters, start_date: e.target.value })
+          }
+        />
+
+        <input
+          type="date"
+          value={filters.end_date}
+          onChange={(e) =>
+            setFilters({ ...filters, end_date: e.target.value })
+          }
+        />
+
+        <button onClick={loadEntries}>Apply filters</button>
+
+        <button
+          onClick={() => {
+            setFilters({ start_date: "", end_date: "" });
+          }}
+        >
+          Clear filters
+        </button>
+      </div>
       {error && <div className="error-box">{error}</div>}
       {loading && <p>Loading entries...</p>}
       {!loading && entries.length === 0 && (

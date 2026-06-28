@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 import app.services as services
 from fastapi.middleware.cors import CORSMiddleware
-
+from typing import Optional
 
 app = FastAPI(title="Personal Data Dashboard (V1)")
 
@@ -32,8 +32,18 @@ def create_entry(payload: DailyEntryCreate, db: Session = Depends(get_db)):
     db.refresh(new_entry)
     return new_entry
 @app.get("/api/entries", response_model=list[DailyEntryRead])            
-def get_entries(db: Session = Depends(get_db)):
-    entries = db.query(DailyEntry).order_by(DailyEntry.date.desc()).all()
+def get_entries(
+    start_date: Optional[date] = None, 
+    end_date: Optional[date] = None, 
+    db: Session = Depends(get_db)):
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date cannot be after end_date")
+    query = db.query(DailyEntry)
+    if start_date:
+        query = query.filter(DailyEntry.date >= start_date)
+    if end_date:
+        query = query.filter(DailyEntry.date <= end_date)
+    entries = query.order_by(DailyEntry.date.desc()).all()
     return entries
 @app.get("/api/entries/{entry_id}", response_model=DailyEntryRead)
 def get_entry(entry_id: int, db: Session = Depends(get_db)):
