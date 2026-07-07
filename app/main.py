@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from app.db import engine, get_db
 from app.models import Base, DailyEntry
-from app.schemas import DailyEntryCreate, DailyEntryRead, DailyEntryEdit, Summary7Days
+from app.schemas import DailyEntryCreate, DailyEntryRead, DailyEntryEdit, Summary7Days, AnalyticsSummary
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 import app.services as services
@@ -113,4 +113,23 @@ def get_last_7_days_summary(db: Session = Depends(get_db)):
         total_stimulation_minutes=services.calculate_total_stimulation_minutes(entries),
         average_stimulation_minutes=services.calculate_average_stimulation_minutes(entries),
         average_litres_water=services.calculate_average_litres_water(entries),
+    )
+@app.get("/api/analytics", response_model=AnalyticsSummary)
+def get_analytics(
+    start_date: Optional[date] = None, 
+    end_date: Optional[date] = None, 
+    db: Session = Depends(get_db)
+):
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date cannot be after end_date")
+    
+    entries = services.get_entries_by_date_range(
+        db=db,
+        start_date=start_date,
+        end_date=end_date
+    )
+    return services.build_analytics_summary(
+        entries=entries,
+        start_date=start_date,
+        end_date=end_date
     )

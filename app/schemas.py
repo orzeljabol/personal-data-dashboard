@@ -47,3 +47,26 @@ class Summary7Days(BaseModel):
     average_stimulation_minutes: Optional[float]
 
     average_litres_water: Optional[float]
+class AnalyticsSummary(BaseModel):
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+
+    tracked_days: int = 0
+
+    average_sleep_hours: Optional[float] = None
+    average_mood: Optional[float] = None
+    average_energy: Optional[float] = None
+
+    total_deep_work_minutes: int = 0
+    average_deep_work_minutes: Optional[float] = None
+
+    total_exercise_minutes: int = 0
+    average_exercise_minutes: Optional[float] = None
+
+    total_stimulation_minutes: int = 0
+    average_stimulation_minutes: Optional[float] = None
+
+    average_litres_water: Optional[float] = None
+
+    best_mood_day: Optional[date] = None
+    worst_mood_day: Optional[date] = None
