@@ -12,6 +12,7 @@ function App() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [editing, setEditing] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [error, setError] = useState("");
@@ -22,17 +23,17 @@ function App() {
   });
   const [showFilter, setShowFilter] = useState(false);
   const friendly = {
-  mood: "Mood must be between 1 and 10",
-  energy: "Energy must be between 1 and 10",
-  sleep_hours: "Sleep hours must be valid",
-  deep_work_minutes: "Deep work minutes must be valid",
-  exercise_minutes: "Exercise minutes must be valid",
-  stimulation_minutes: "Stimulation minutes must be valid",
-  litres_water: "Litres of water must be valid",
-};
-function formatNumbers(value){
-  return value !== null && value !== undefined ? Number(value).toFixed(2) : "-";
-}
+    mood: "Mood must be between 1 and 10",
+    energy: "Energy must be between 1 and 10",
+    sleep_hours: "Sleep hours must be valid",
+    deep_work_minutes: "Deep work minutes must be valid",
+    exercise_minutes: "Exercise minutes must be valid",
+    stimulation_minutes: "Stimulation minutes must be valid",
+    litres_water: "Litres of water must be valid",
+  };
+  function formatNumbers(value){
+    return value !== null && value !== undefined ? Number(value).toFixed(2) : "-";
+  }
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
     sleep_hours: "",
@@ -60,61 +61,61 @@ function formatNumbers(value){
     [e.target.name]: undefined
   }));
   }
-async function loadEntries() {
-  try {
-    setLoading(true);
-    setError("");
+  async function loadEntries() {
+    try {
+      setLoading(true);
+      setError("");
 
-    const params = new URLSearchParams();
+      const params = new URLSearchParams();
 
-    if (filters.start_date) {
-      params.append("start_date", filters.start_date);
+      if (filters.start_date) {
+        params.append("start_date", filters.start_date);
+      }
+
+      if (filters.end_date) {
+        params.append("end_date", filters.end_date);
+      }
+
+      const queryString = params.toString();
+      const url = queryString
+        ? `${API}/entries?${queryString}`
+        : `${API}/entries`;
+
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        throw new Error("Could not load entries.");
+      }
+
+      const data = await res.json();
+      setEntries(data);
+    } catch (err) {
+      setError("Could not load entries. Check if the backend is running or filters are valid.");
+    } finally {
+      setLoading(false);
     }
-
-    if (filters.end_date) {
-      params.append("end_date", filters.end_date);
-    }
-
-    const queryString = params.toString();
-    const url = queryString
-      ? `${API}/entries?${queryString}`
-      : `${API}/entries`;
-
-    const res = await fetch(url);
-
-    if (!res.ok) {
-      throw new Error("Could not load entries.");
-    }
-
-    const data = await res.json();
-    setEntries(data);
-  } catch (err) {
-    setError("Could not load entries. Check if the backend is running or filters are valid.");
-  } finally {
-    setLoading(false);
   }
-}
-async function clearFilters() {
-  setFilters({ start_date: "", end_date: "" });
-  setShowFilter(false);
-  try {
-    setLoading(true);
-    setError("");
+  async function clearFilters() {
+    setFilters({ start_date: "", end_date: "" });
+    setShowFilter(false);
+    try {
+      setLoading(true);
+      setError("");
 
-    const res = await fetch(`${API}/entries`);
+      const res = await fetch(`${API}/entries`);
 
-    if (!res.ok) {
-      throw new Error("Could not load entries.");
+      if (!res.ok) {
+        throw new Error("Could not load entries.");
+      }
+
+      const data = await res.json();
+      setEntries(data);
+    } catch (err) {
+      setError("Could not load entries. Check if the backend is running.");
+    } finally {
+      setLoading(false);
     }
-
-    const data = await res.json();
-    setEntries(data);
-  } catch (err) {
-    setError("Could not load entries. Check if the backend is running.");
-  } finally {
-    setLoading(false);
   }
-}
   async function createEntry() {
     if (Number(form.mood) < 1 || Number(form.mood) > 10) {
       setError("Mood must be between 1 and 10");
@@ -148,42 +149,42 @@ async function clearFilters() {
     });
     
     if (!res.ok) {
-  const data = await res.json().catch(() => null);
+      const data = await res.json().catch(() => null);
 
-  if (data?.detail && Array.isArray(data.detail)) {
-    const errors = {};
-    const messages = [];
+      if (data?.detail && Array.isArray(data.detail)) {
+        const errors = {};
+        const messages = [];
 
-    data.detail.forEach((err) => {
-      const field = err.loc?.[1];
-      if (field) {
-        errors[field] = err.msg;
-        messages.push(friendly[field] || err.msg);
+        data.detail.forEach((err) => {
+          const field = err.loc?.[1];
+          if (field) {
+            errors[field] = err.msg;
+            messages.push(friendly[field] || err.msg);
+          }
+        });
+
+        setFieldErrors(errors);
+        setError(messages.join(" | "));
+      } 
+      else {
+        let message = "Could not create entry.";
+
+        if (res.status === 422) {
+          message = "Some fields contain invalid values.";
+        }
+        else if (res.status === 400) {
+          message = "Entry for this date already exists.";
+        }
+        else if (res.status === 500) {
+          message = "Server error. Please try again later.";
+        }
+
+        setError(message);
+        setFieldErrors({});
       }
-    });
 
-    setFieldErrors(errors);
-    setError(messages.join(" | "));
-  } 
-  else {
-    let message = "Could not create entry.";
-
-    if (res.status === 422) {
-      message = "Some fields contain invalid values.";
+      return;
     }
-    else if (res.status === 400) {
-    message = "Entry for this date already exists.";
-    }
-    else if (res.status === 500) {
-    message = "Server error. Please try again later.";
-    }
-
-    setError(message);
-    setFieldErrors({});
-  }
-
-  return;
-}
     setForm({
       date: new Date().toISOString().slice(0, 10),
       sleep_hours: "",
@@ -221,123 +222,124 @@ async function clearFilters() {
   }
   
   async function saveEdit() {
-  if (!editing) return;
+    if (!editing) return;
 
-  const payload = {};
-  const numFields = new Set([
-    "sleep_hours",
-    "mood",
-    "energy",
-    "deep_work_minutes",
-    "exercise_minutes",
-    "stimulation_minutes",
-    "litres_water",
-  ]);
+    const payload = {};
+    const numFields = new Set([
+      "sleep_hours",
+      "mood",
+      "energy",
+      "deep_work_minutes",
+      "exercise_minutes",
+      "stimulation_minutes",
+      "litres_water",
+    ]);
 
-  for (const [k, v] of Object.entries(editForm)) {
-    if (v === "") continue;
+    for (const [k, v] of Object.entries(editForm)) {
+      if (v === "") continue;
 
-    let value = v;
-    if (numFields.has(k)) {
-      value = Number(v);
-    }
-
-    const original = editing[k] ?? "";
-    if (value !== original) {
-      payload[k] = value;
-    }
-  }
-
-  if (Object.keys(payload).length === 0) {
-    setError("No changes to save.");
-    return;
-  }
-
-  const res = await fetch(`${API}/entries/${editing.id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-
-    if (data?.detail && Array.isArray(data.detail)) {
-      const errors = {};
-      const messages = [];
-
-      data.detail.forEach((err) => {
-        const field = err.loc?.[1];
-        if (field) {
-          errors[field] = err.msg;
-          messages.push(friendly[field] || err.msg);
-        }
-      });
-
-      setFieldErrors(errors);
-      setError(messages.join(" | "));
-    } else {
-      let message = "Could not update entry.";
-      if (res.status === 422) {
-        message = "Some fields contain invalid values.";
-      } else if (res.status === 400) {
-        message = "Entry for this date already exists.";
-      } else if (res.status === 500) {
-        message = "Server error. Please try again later.";
+      let value = v;
+      if (numFields.has(k)) {
+        value = Number(v);
       }
 
-      setError(message);
-      setFieldErrors({});
+      const original = editing[k] ?? "";
+      if (value !== original) {
+        payload[k] = value;
+      }
     }
 
-    return;
-  }
+    if (Object.keys(payload).length === 0) {
+      setError("No changes to save.");
+      return;
+    }
+
+    const res = await fetch(`${API}/entries/${editing.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+
+      if (data?.detail && Array.isArray(data.detail)) {
+        const errors = {};
+        const messages = [];
+
+        data.detail.forEach((err) => {
+          const field = err.loc?.[1];
+          if (field) {
+            errors[field] = err.msg;
+            messages.push(friendly[field] || err.msg);
+          }
+        });
+
+        setFieldErrors(errors);
+        setError(messages.join(" | "));
+      } 
+      else {
+        let message = "Could not update entry.";
+        if (res.status === 422) {
+          message = "Some fields contain invalid values.";
+        } else if (res.status === 400) {
+          message = "Entry for this date already exists.";
+        } else if (res.status === 500) {
+          message = "Server error. Please try again later.";
+        }
+
+        setError(message);
+        setFieldErrors({});
+      } 
+
+      return;
+    }
 
   const updated = await res.json();
   setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
   setEditing(null);
   setError("");
   setFieldErrors({});
-}
+    }
 
 
-async function deleteEntry(entryId) {
-  const res = await fetch(`${API}/entries/${entryId}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) {
-      let message = "Could not delete entry.";
+  async function deleteEntry(entryId) {
+    const res = await fetch(`${API}/entries/${entryId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+        let message = "Could not delete entry.";
+        if (res.status === 404) {
+          message = "Entry not found.";
+        }
+        else if (res.status === 500) {
+          message = "Server error. Please try again later.";
+        }
+        setError(message);
+        setFieldErrors({});
+    
+
+        return;
+    }
+    setEntries((prev) => prev.filter(e => e.id !== entryId));
+  }
+  async function showSummary() {
+    const res = await fetch(`${API}/entries/summary/7days`);
+    const data = await res.json();
+    if (!res.ok) {
+      let message = "Could not load summary.";
       if (res.status === 404) {
-        message = "Entry not found.";
+        message = "No entries found for the last 7 days.";
       }
       else if (res.status === 500) {
         message = "Server error. Please try again later.";
       }
+
       setError(message);
-      setFieldErrors({});
-  
-
       return;
-  }
-  setEntries((prev) => prev.filter(e => e.id !== entryId));
-}
-async function showSummary() {
-  const res = await fetch(`${API}/entries/summary/7days`);
-  const data = await res.json();
-  if (!res.ok) {
-    let message = "Could not load summary.";
-    if (res.status === 404) {
-      message = "No entries found for the last 7 days.";
     }
-    else if (res.status === 500) {
-      message = "Server error. Please try again later.";
-    }
-
-    setError(message);
-    return;
+    setSummary(data ? [data] : []);
   }
-  setSummary(data ? [data] : []);
-}
   useEffect(() => {
     loadEntries();
   }, []);
@@ -356,38 +358,38 @@ async function showSummary() {
             <p>Select a date range to view specific entries.</p>
           </div>
 
-        <div className="filters-grid">
-          <div className="filter-field">
-            <label>Start date</label>
-            <input
-              type="date"
-              value={filters.start_date}
-              onChange={(e) =>
-                setFilters({ ...filters, start_date: e.target.value })
-              }
-            />
-          </div>
+          <div className="filters-grid">
+            <div className="filter-field">
+              <label>Start date</label>
+              <input
+                type="date"
+                value={filters.start_date}
+                onChange={(e) =>
+                  setFilters({ ...filters, start_date: e.target.value })
+                }
+              />
+            </div>
 
-          <div className="filter-field">
-            <label>End date</label>
-            <input
-              type="date"
-              value={filters.end_date}
-              onChange={(e) =>
-                setFilters({ ...filters, end_date: e.target.value })
-              }
-            />
-          </div>
+            <div className="filter-field">
+              <label>End date</label>
+              <input
+                type="date"
+                value={filters.end_date}
+                onChange={(e) =>
+                  setFilters({ ...filters, end_date: e.target.value })
+                }
+              />
+            </div>
 
-          <div className="filters-actions">
-            <button onClick={loadEntries}>Apply</button>
+            <div className="filters-actions">
+              <button onClick={loadEntries}>Apply</button>
 
-            <button className="secondary-button" onClick={clearFilters}>
-              Clear
-            </button>
+              <button className="secondary-button" onClick={clearFilters}>
+                Clear
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       )}
       {error && <div className="error-box">{error}</div>}
       {loading && <p>Loading entries...</p>}
@@ -524,125 +526,125 @@ async function showSummary() {
       </div>
       )}
       {editing && (
-  <div className="edit-form">
-    <h2>Edit entry: {editing.date}</h2>
+        <div className="edit-form">
+          <h2>Edit entry: {editing.date}</h2>
 
-    <div className="form-grid">
-      <div className="field">
-        <label>Sleep [h]</label>
-        <input
-          type="number"
-          value={editForm.sleep_hours}
-          onChange={(e) => setEditForm({ ...editForm, sleep_hours: e.target.value })}
-          placeholder="Sleep hours"
-        />
-      </div>
+          <div className="form-grid">
+            <div className="field">
+              <label>Sleep [h]</label>
+              <input
+                type="number"
+                value={editForm.sleep_hours}
+                onChange={(e) => setEditForm({ ...editForm, sleep_hours: e.target.value })}
+                placeholder="Sleep hours"
+              />
+            </div>
 
-      <div className="field">
-        <label>Mood (1-10)</label>
-        <input
-          type="number"
-          value={editForm.mood}
-          onChange={(e) => setEditForm({ ...editForm, mood: e.target.value })}
-          placeholder="Mood"
-        />
-      </div>
+            <div className="field">
+              <label>Mood (1-10)</label>
+              <input
+                type="number"
+                value={editForm.mood}
+                onChange={(e) => setEditForm({ ...editForm, mood: e.target.value })}
+                placeholder="Mood"
+              />
+            </div>
 
-      <div className="field">
-        <label>Energy (1-10)</label>
-        <input
-          type="number"
-          value={editForm.energy}
-          onChange={(e) => setEditForm({ ...editForm, energy: e.target.value })}
-          placeholder="Energy"
-        />
-      </div>
+            <div className="field">
+              <label>Energy (1-10)</label>
+              <input
+                type="number"
+                value={editForm.energy}
+                onChange={(e) => setEditForm({ ...editForm, energy: e.target.value })}
+                placeholder="Energy"
+              />
+            </div>
 
-      <div className="field">
-        <label>Deep work [min]</label>
-        <input
-          type="number"
-          value={editForm.deep_work_minutes}
-          onChange={(e) => setEditForm({ ...editForm, deep_work_minutes: e.target.value })}
-          placeholder="Deep work minutes"
-        />
-      </div>
+            <div className="field">
+              <label>Deep work [min]</label>
+              <input
+                type="number"
+                value={editForm.deep_work_minutes}
+                onChange={(e) => setEditForm({ ...editForm, deep_work_minutes: e.target.value })}
+                placeholder="Deep work minutes"
+              />
+            </div>
 
-      <div className="field">
-        <label>Exercise [min]</label>
-        <input
-          type="number"
-          value={editForm.exercise_minutes}
-          onChange={(e) => setEditForm({ ...editForm, exercise_minutes: e.target.value })}
-          placeholder="Exercise minutes"
-        />
-      </div>
+            <div className="field">
+              <label>Exercise [min]</label>
+              <input
+                type="number"
+                value={editForm.exercise_minutes}
+                onChange={(e) => setEditForm({ ...editForm, exercise_minutes: e.target.value })}
+                placeholder="Exercise minutes"
+              />
+            </div>
 
-      <div className="field">
-        <label>Stimulation [min]</label>
-        <input
-          type="number"
-          value={editForm.stimulation_minutes}
-          onChange={(e) => setEditForm({ ...editForm, stimulation_minutes: e.target.value })}
-          placeholder="Stimulation minutes"
-        />
-      </div>
+            <div className="field">
+              <label>Stimulation [min]</label>
+              <input
+                type="number"
+                value={editForm.stimulation_minutes}
+                onChange={(e) => setEditForm({ ...editForm, stimulation_minutes: e.target.value })}
+                placeholder="Stimulation minutes"
+              />
+            </div>
 
-      <div className="field">
-        <label>Water [l]</label>
-        <input
-          type="number"
-          value={editForm.litres_water}
-          onChange={(e) => setEditForm({ ...editForm, litres_water: e.target.value })}
-          placeholder="Litres of water"
-        />
-      </div>
+            <div className="field">
+              <label>Water [l]</label>
+              <input
+                type="number"
+                value={editForm.litres_water}
+                onChange={(e) => setEditForm({ ...editForm, litres_water: e.target.value })}
+                placeholder="Litres of water"
+              />
+            </div>
 
-      <div className="field field-full">
-        <label>Notes</label>
-        <textarea
-          value={editForm.notes}
-          onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-          placeholder="Notes"
-        />
-      </div>
-    </div>
+            <div className="field field-full">
+              <label>Notes</label>
+              <textarea
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                placeholder="Notes"
+              />
+            </div>
+          </div>
 
-    <div className="checkbox-row">
-      <label>
-        <input
-          type="checkbox"
-          checked={editForm.no_porn}
-          onChange={(e) => setEditForm({ ...editForm, no_porn: e.target.checked })}
-        />
-        No porn
-      </label>
+          <div className="checkbox-row">
+            <label>
+              <input
+                type="checkbox"
+                checked={editForm.no_porn}
+                onChange={(e) => setEditForm({ ...editForm, no_porn: e.target.checked })}
+              />
+              No porn
+            </label>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={editForm.no_smoking}
-          onChange={(e) => setEditForm({ ...editForm, no_smoking: e.target.checked })}
-        />
-        No smoking
-      </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={editForm.no_smoking}
+                onChange={(e) => setEditForm({ ...editForm, no_smoking: e.target.checked })}
+              />
+              No smoking
+            </label>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={editForm.no_alcohol}
-          onChange={(e) => setEditForm({ ...editForm, no_alcohol: e.target.checked })}
-        />
-        No alcohol
-      </label>
-    </div>
+            <label>
+              <input
+                type="checkbox"
+                checked={editForm.no_alcohol}
+                onChange={(e) => setEditForm({ ...editForm, no_alcohol: e.target.checked })}
+              />
+              No alcohol
+            </label>
+          </div>
 
-    <div className="action-row">
-      <button onClick={saveEdit}>Save</button>
-      <button onClick={() => setEditing(null)}>Cancel</button>
-    </div>
-  </div>
-)}
+          <div className="action-row">
+            <button onClick={saveEdit}>Save</button>
+            <button onClick={() => setEditing(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {!loading && entries.map(entry => (
         <div key={entry.id} className="card">
