@@ -15,6 +15,7 @@ async function loadEntries() {
     } catch (err) {
         out.textContent = `Error: ` + err.message;
     }
+}
 
 }
 async function history() {

@@ -22,18 +22,7 @@ function App() {
     end_date: "",
   });
   const [showFilter, setShowFilter] = useState(false);
-  const friendly = {
-    mood: "Mood must be between 1 and 10",
-    energy: "Energy must be between 1 and 10",
-    sleep_hours: "Sleep hours must be valid",
-    deep_work_minutes: "Deep work minutes must be valid",
-    exercise_minutes: "Exercise minutes must be valid",
-    stimulation_minutes: "Stimulation minutes must be valid",
-    litres_water: "Litres of water must be valid",
-  };
-  function formatNumbers(value){
-    return value !== null && value !== undefined ? Number(value).toFixed(2) : "-";
-  }
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
     sleep_hours: "",
@@ -61,22 +50,43 @@ function App() {
     [e.target.name]: undefined
   }));
   }
-  async function loadEntries() {
+  const friendly = {
+    mood: "Mood must be between 1 and 10",
+    energy: "Energy must be between 1 and 10",
+    sleep_hours: "Sleep hours must be valid",
+    deep_work_minutes: "Deep work minutes must be valid",
+    exercise_minutes: "Exercise minutes must be valid",
+    stimulation_minutes: "Stimulation minutes must be valid",
+    litres_water: "Litres of water must be valid",
+  };
+  function formatNumbers(value){
+    return value !== null && value !== undefined ? Number(value).toFixed(2) : "-";
+  }
+  async function applyFilters() {
+    await loadEntries(filters);
+    if (showAnalytics) {
+      await loadAnalytics();
+    }
+  }
+  function buildFilterQueryString(selectedFilters = filters) {
+    const params = new URLSearchParams();
+
+    if (selectedFilters.start_date) {
+      params.append("start_date", selectedFilters.start_date);
+    }
+
+    if (selectedFilters.end_date) {
+      params.append("end_date", selectedFilters.end_date);
+    }
+
+    return params.toString();
+  }
+  async function loadEntries(selectedFilters = filters) {
     try {
       setLoading(true);
       setError("");
 
-      const params = new URLSearchParams();
-
-      if (filters.start_date) {
-        params.append("start_date", filters.start_date);
-      }
-
-      if (filters.end_date) {
-        params.append("end_date", filters.end_date);
-      }
-
-      const queryString = params.toString();
+      const queryString = buildFilterQueryString(selectedFilters);
       const url = queryString
         ? `${API}/entries?${queryString}`
         : `${API}/entries`;
@@ -89,10 +99,30 @@ function App() {
 
       const data = await res.json();
       setEntries(data);
-    } catch (err) {
+    } 
+    catch (err) {
       setError("Could not load entries. Check if the backend is running or filters are valid.");
-    } finally {
+    } 
+    finally {
       setLoading(false);
+    }
+  }
+  async function loadAnalytics() {
+    try {
+      setError("");
+      const queryString = buildFilterQueryString();
+      const url = queryString
+        ? `${API}/analytics?${queryString}`
+        : `${API}/analytics`;
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        throw new Error("Could not load analytics.");
+      }
+      const data = await res.json();
+      setAnalytics(data);
+    } catch {
+      setError("Could not load analytics. Check if the backend is running or filters are valid.");
     }
   }
   async function clearFilters() {
@@ -110,7 +140,7 @@ function App() {
 
       const data = await res.json();
       setEntries(data);
-    } catch (err) {
+    } catch {
       setError("Could not load entries. Check if the backend is running.");
     } finally {
       setLoading(false);
@@ -202,6 +232,7 @@ function App() {
     setError("");
     setFieldErrors({});
     setShowForm(false);
+    resetAnalytics();
     loadEntries();
   }
   function startEdit(entry) {
@@ -349,8 +380,9 @@ function App() {
       <h1>Personal Dashboard</h1>
       <button onClick={() => setShowForm(prev => !prev)}>{showForm ? "Close":"New"}</button>
       <button onClick={() => setShowFilter(prev => !prev)}>{showFilter ? "Close Filters" : "Filters"}</button>
-      <button onClick={showSummary}>Statistics</button>
+      <button onClick={() => {if(!showAnalytics) { loadAnalytics();} setShowAnalytics(prev => !prev)}}>{showAnalytics ? "Hide Analytics" : "Analytics"}</button>
       <button onClick={loadEntries}>Reload</button>
+      
       {showFilter && (
         <div className="filters-card">
           <div className="filters-header">
@@ -382,7 +414,7 @@ function App() {
             </div>
 
             <div className="filters-actions">
-              <button onClick={loadEntries}>Apply</button>
+              <button onClick={applyFilters}>Apply</button>
 
               <button className="secondary-button" onClick={clearFilters}>
                 Clear
@@ -396,19 +428,72 @@ function App() {
       {!loading && entries.length === 0 && (
         <p>No entries yet. Create your first daily entry.</p>
       )}
-      {summary && (
-        summary.map((item,index) => (
-          <div key={index} className="summary-card">
-            <p><FaSmile /> <b>Avg Mood:</b> {formatNumbers(item.average_mood)}</p>
-            <p><FaBolt /> <b>Avg Energy:</b> {formatNumbers(item.average_energy)}</p>
-            <p><FaBed /> <b>Avg Sleep [h]:</b> {formatNumbers(item.average_sleep_hours)}</p>
-            <p><FaTint /> <b>Avg Water [l]:</b> {formatNumbers(item.average_litres_water)}</p>
-            <p><FaBrain /> <b>Total Deep Work [min]:</b> {Math.round(formatNumbers(item.total_deep_work_minutes))}</p>
-            <p><FaDumbbell /> <b>Total Exercise [min]:</b> {Math.round(formatNumbers(item.total_exercise_minutes))}</p>
-            <p><IoHourglass /><b>Total Stimulation [min]:</b> {Math.round(formatNumbers(item.total_stimulation_minutes))}</p>
+      {showAnalytics && analytics && (
+        <div className="analytics-card">
+          <div className="analytics-header">
+            <h2>Analytics</h2>
+            <p>
+              {analytics.start_date || analytics.end_date}
+            </p>
           </div>
-        ))
-      )} 
+          <div className="analytics-grid">
+            <div className="analytics-item">
+              <span>Tracked Days</span>
+              <strong>{analytics.tracked_days}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Average Mood</span>
+              <strong>{analytics.average_mood ?? "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Average Energy</span>
+              <strong>{analytics.average_energy ?? "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Average Sleep</span>
+              <strong>{analytics.average_sleep_hours !== null ? `${analytics.average_sleep_hours} h` : "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Average deep work</span>
+              <strong>{analytics.average_deep_work_minutes !== null ? `${analytics.average_deep_work_minutes} min` : "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Total Deep Work</span>
+              <strong>{analytics.total_deep_work_minutes !== null ? `${analytics.total_deep_work_minutes} min` : "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Average Exercise</span>
+              <strong>{analytics.average_exercise_minutes !== null ? `${analytics.average_exercise_minutes} min` : "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Total Exercise</span>
+              <strong>{analytics.total_exercise_minutes !== null ? `${analytics.total_exercise_minutes} min` : "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Average Stimulation</span>
+              <strong>{analytics.average_stimulation_minutes !== null ? `${analytics.average_stimulation_minutes} min` : "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Total Stimulation</span>
+              <strong>{analytics.total_stimulation_minutes !== null ? `${analytics.total_stimulation_minutes} min` : "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Average Water</span>
+              <strong>{analytics.average_litres_water !== null ? `${analytics.average_litres_water} l` : "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Best Mood day</span>
+              <strong>{analytics.best_mood_day ?? "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Worst Mood day</span>
+              <strong>{analytics.worst_mood_day ?? "No data"}</strong>
+            </div>
+          </div>
+          
+        </div>
+      )}
+
       {showForm && (<div className="entry-form">
       <h2>New Entry</h2>
       <div className="row">
