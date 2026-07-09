@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import { FaBed, FaBolt, FaSmile, FaDumbbell, FaTint, FaBrain } from "react-icons/fa";
-import { IoHourglass } from "react-icons/io5";
 
 
 const API = "http://127.0.0.1:8001/api";
+
+function MetricLabel({ icon, label }) {
+  return (
+    <span className="metric-label">
+      <span className="metric-icon" aria-hidden="true">{icon}</span>
+      <span>{label}</span>
+    </span>
+  );
+}
+
 function toNumberOrNull(value) {
   return value === "" ? null : Number(value);
 }
@@ -433,7 +441,10 @@ function App() {
       {showAnalytics && analytics && (
         <div className="analytics-card">
           <div className="analytics-header">
-            <h2>Analytics</h2>
+            <h2>
+              <span className="section-icon" aria-hidden="true">✦</span>
+              Analytics
+            </h2>
             <p>
               {analytics.start_date || analytics.end_date
                 ? `From ${formatDate(analytics.start_date)} to ${formatDate(analytics.end_date)}`
@@ -442,59 +453,59 @@ function App() {
           </div>
           <div className="analytics-grid">
             <div className="analytics-item">
-              <span>Tracked Days</span>
+              <span><MetricLabel icon="📅" label="Tracked Days" /></span>
               <strong>{analytics.tracked_days}</strong>
             </div>
             <div className="analytics-item">
-              <span>Average Mood</span>
+              <span><MetricLabel icon="🌤️" label="Average Mood" /></span>
               <strong>{analytics.average_mood ?? "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Average Energy</span>
+              <span><MetricLabel icon="⚡" label="Average Energy" /></span>
               <strong>{analytics.average_energy ?? "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Average Sleep</span>
+              <span><MetricLabel icon="😴" label="Average Sleep" /></span>
               <strong>{analytics.average_sleep_hours !== null ? `${analytics.average_sleep_hours} h` : "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Average deep work</span>
+              <span><MetricLabel icon="🎯" label="Average deep work" /></span>
               <strong>{analytics.average_deep_work_minutes !== null ? `${analytics.average_deep_work_minutes} min` : "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Total Deep Work</span>
+              <span><MetricLabel icon="🎯" label="Total Deep Work" /></span>
               <strong>{analytics.total_deep_work_minutes !== null ? `${analytics.total_deep_work_minutes} min` : "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Average Exercise</span>
+              <span><MetricLabel icon="🏃" label="Average Exercise" /></span>
               <strong>{analytics.average_exercise_minutes !== null ? `${analytics.average_exercise_minutes} min` : "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Total Exercise</span>
+              <span><MetricLabel icon="🏃" label="Total Exercise" /></span>
               <strong>{analytics.total_exercise_minutes !== null ? `${analytics.total_exercise_minutes} min` : "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Average Stimulation</span>
+              <span><MetricLabel icon="🧠" label="Average Stimulation" /></span>
               <strong>{analytics.average_stimulation_minutes !== null ? `${analytics.average_stimulation_minutes} min` : "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Total Stimulation</span>
+              <span><MetricLabel icon="🧠" label="Total Stimulation" /></span>
               <strong>{analytics.total_stimulation_minutes !== null ? `${analytics.total_stimulation_minutes} min` : "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Average Water</span>
+              <span><MetricLabel icon="💧" label="Average Water" /></span>
               <strong>{analytics.average_litres_water !== null ? `${analytics.average_litres_water} l` : "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Clean Days</span>
+              <span><MetricLabel icon="✅" label="Clean Days" /></span>
               <strong>{analytics.clean_days}</strong>
             </div>
             <div className="analytics-item">
-              <span>Best Mood day</span>
+              <span><MetricLabel icon="🌟" label="Best Mood day" /></span>
               <strong>{formatDate(analytics.best_mood_day) ?? "No data"}</strong>
             </div>
             <div className="analytics-item">
-              <span>Worst Mood day</span>
+              <span><MetricLabel icon="🌧️" label="Worst Mood day" /></span>
               <strong>{formatDate(analytics.worst_mood_day) ?? "No data"}</strong>
             </div>
           </div>
@@ -745,18 +756,18 @@ function App() {
             <button onClick={() => startEdit(entry)}>Edit</button>
             <button onClick={() => deleteEntry(entry.id)}>Delete</button>
           </div>
-          <p><b>Date:</b> {formatDate(entry.date)}</p>
-          <p><b>Sleep:</b> {entry.sleep_hours}</p>
-          <p><b>Mood:</b> {entry.mood}</p>
-          <p><b>Energy:</b> {entry.energy}</p>
-          <p><b>Deep Work:</b> {entry.deep_work_minutes} minutes</p>
-          <p><b>Exercise:</b> {entry.exercise_minutes} minutes</p>
-          <p><b>Stimulation:</b> {entry.stimulation_minutes} minutes</p>
-          <p><b>Water:</b> {entry.litres_water} litres</p>
-          <p><b>Notes:</b> {entry.notes}</p>
-          <p><b>No Porn:</b> {entry.no_porn ? "Yes" : "No"}</p>
-          <p><b>No Smoking:</b> {entry.no_smoking ? "Yes" : "No"}</p>
-          <p><b>No Alcohol:</b> {entry.no_alcohol ? "Yes" : "No"}</p>
+          <p><b><MetricLabel icon="📅" label="Date" /></b> {formatDate(entry.date)}</p>
+          <p><b><MetricLabel icon="😴" label="Sleep" /></b> {entry.sleep_hours}</p>
+          <p><b><MetricLabel icon="🌤️" label="Mood" /></b> {entry.mood}</p>
+          <p><b><MetricLabel icon="⚡" label="Energy" /></b> {entry.energy}</p>
+          <p><b><MetricLabel icon="🎯" label="Deep Work" /></b> {entry.deep_work_minutes} minutes</p>
+          <p><b><MetricLabel icon="🏃" label="Exercise" /></b> {entry.exercise_minutes} minutes</p>
+          <p><b><MetricLabel icon="🧠" label="Stimulation" /></b> {entry.stimulation_minutes} minutes</p>
+          <p><b><MetricLabel icon="💧" label="Water" /></b> {entry.litres_water} litres</p>
+          <p><b><MetricLabel icon="📝" label="Notes" /></b> {entry.notes}</p>
+          <p><b><MetricLabel icon="🚫" label="No Porn" /></b> {entry.no_porn ? "Yes" : "No"}</p>
+          <p><b><MetricLabel icon="🚭" label="No Smoking" /></b> {entry.no_smoking ? "Yes" : "No"}</p>
+          <p><b><MetricLabel icon="🍷" label="No Alcohol" /></b> {entry.no_alcohol ? "Yes" : "No"}</p>
         </div>
       ))}
     </div>
