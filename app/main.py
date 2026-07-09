@@ -113,6 +113,7 @@ def get_last_7_days_summary(db: Session = Depends(get_db)):
         total_stimulation_minutes=services.calculate_total_stimulation_minutes(entries),
         average_stimulation_minutes=services.calculate_average_stimulation_minutes(entries),
         average_litres_water=services.calculate_average_litres_water(entries),
+        clean_days=services.get_clean_days(entries),
     )
 @app.get("/api/analytics", response_model=AnalyticsSummary)
 def get_analytics(

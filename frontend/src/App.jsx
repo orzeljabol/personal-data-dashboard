@@ -430,7 +430,9 @@ function App() {
           <div className="analytics-header">
             <h2>Analytics</h2>
             <p>
-              {analytics.start_date || analytics.end_date}
+              {analytics.start_date && analytics.end_date
+                ? `From ${analytics.start_date} to ${analytics.end_date}`
+                : "All time"}
             </p>
           </div>
           <div className="analytics-grid">
@@ -477,6 +479,10 @@ function App() {
             <div className="analytics-item">
               <span>Average Water</span>
               <strong>{analytics.average_litres_water !== null ? `${analytics.average_litres_water} l` : "No data"}</strong>
+            </div>
+            <div className="analytics-item">
+              <span>Clean Days</span>
+              <strong>{analytics.clean_days}</strong>
             </div>
             <div className="analytics-item">
               <span>Best Mood day</span>

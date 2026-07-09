@@ -67,6 +67,7 @@ class AnalyticsSummary(BaseModel):
     average_stimulation_minutes: Optional[float] = None
 
     average_litres_water: Optional[float] = None
-
+    clean_days: int = 0
+    
     best_mood_day: Optional[date] = None
     worst_mood_day: Optional[date] = None

@@ -120,7 +120,11 @@ def get_worst_mood_day(entries):
     worst_entry = min(entries_with_mood, key=lambda entry: entry.mood)
     return worst_entry.date
 
-
+def get_clean_days(entries):
+    return sum(
+        1 for entry in entries
+        if entry.no_porn and entry.no_smoking and entry.no_alcohol
+    )
 def build_analytics_summary(entries, start_date=None, end_date=None):
     return {
         "start_date": start_date,
@@ -142,7 +146,8 @@ def build_analytics_summary(entries, start_date=None, end_date=None):
         "average_stimulation_minutes": calculate_average_stimulation_minutes(entries),
 
         "average_litres_water": calculate_average_litres_water(entries),
-
+        "clean_days": get_clean_days(entries),
         "best_mood_day": get_best_mood_day(entries),
         "worst_mood_day": get_worst_mood_day(entries),
+
     }
