@@ -21,7 +21,7 @@ function App() {
     start_date: "",
     end_date: "",
   });
-  const [showFilter, setShowFilter] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -107,43 +107,40 @@ function App() {
       setLoading(false);
     }
   }
-  async function loadAnalytics() {
+  async function loadAnalytics(selectedFilters = filters) {
     try {
       setError("");
-      const queryString = buildFilterQueryString();
+
+      const queryString = buildFilterQueryString(selectedFilters);
       const url = queryString
         ? `${API}/analytics?${queryString}`
         : `${API}/analytics`;
+
       const res = await fetch(url);
 
       if (!res.ok) {
         throw new Error("Could not load analytics.");
       }
+
       const data = await res.json();
       setAnalytics(data);
-    } catch {
+    } catch (err) {
       setError("Could not load analytics. Check if the backend is running or filters are valid.");
     }
   }
   async function clearFilters() {
-    setFilters({ start_date: "", end_date: "" });
-    setShowFilter(false);
-    try {
-      setLoading(true);
-      setError("");
+    const emptyFilters = {
+      start_date: "",
+      end_date: "",
+    };
 
-      const res = await fetch(`${API}/entries`);
+    setFilters(emptyFilters);
+    setShowFilters(false);
 
-      if (!res.ok) {
-        throw new Error("Could not load entries.");
-      }
+    await loadEntries(emptyFilters);  
 
-      const data = await res.json();
-      setEntries(data);
-    } catch {
-      setError("Could not load entries. Check if the backend is running.");
-    } finally {
-      setLoading(false);
+    if (showAnalytics) {
+      await loadAnalytics(emptyFilters);
     }
   }
   async function createEntry() {
@@ -233,7 +230,7 @@ function App() {
     setFieldErrors({});
     setShowForm(false);
     resetAnalytics();
-    loadEntries();
+    await loadEntries();
   }
   function startEdit(entry) {
     setEditing(entry);
@@ -379,11 +376,11 @@ function App() {
     <div className="container">
       <h1>Personal Dashboard</h1>
       <button onClick={() => setShowForm(prev => !prev)}>{showForm ? "Close":"New"}</button>
-      <button onClick={() => setShowFilter(prev => !prev)}>{showFilter ? "Close Filters" : "Filters"}</button>
+      <button onClick={() => setShowFilters(prev => !prev)}>{showFilters ? "Close Filters" : "Filters"}</button>
       <button onClick={() => {if(!showAnalytics) { loadAnalytics();} setShowAnalytics(prev => !prev)}}>{showAnalytics ? "Hide Analytics" : "Analytics"}</button>
       <button onClick={loadEntries}>Reload</button>
       
-      {showFilter && (
+      {showFilters && (
         <div className="filters-card">
           <div className="filters-header">
             <h2>Filter entries</h2>
