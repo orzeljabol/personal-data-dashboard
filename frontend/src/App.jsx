@@ -62,6 +62,11 @@ function App() {
   function formatNumbers(value){
     return value !== null && value !== undefined ? Number(value).toFixed(2) : "-";
   }
+  function formatDate(dateString) {
+    if (!dateString) return "No date";
+    const [year, month, day] = dateString.split("-");
+    return `${day}.${month}.${year}`;
+  }
   async function applyFilters() {
     await loadEntries(filters);
     if (showAnalytics) {
@@ -430,8 +435,8 @@ function App() {
           <div className="analytics-header">
             <h2>Analytics</h2>
             <p>
-              {analytics.start_date && analytics.end_date
-                ? `From ${analytics.start_date} to ${analytics.end_date}`
+              {analytics.start_date || analytics.end_date
+                ? `From ${formatDate(analytics.start_date)} to ${formatDate(analytics.end_date)}`
                 : "All time"}
             </p>
           </div>
@@ -486,11 +491,11 @@ function App() {
             </div>
             <div className="analytics-item">
               <span>Best Mood day</span>
-              <strong>{analytics.best_mood_day ?? "No data"}</strong>
+              <strong>{formatDate(analytics.best_mood_day) ?? "No data"}</strong>
             </div>
             <div className="analytics-item">
               <span>Worst Mood day</span>
-              <strong>{analytics.worst_mood_day ?? "No data"}</strong>
+              <strong>{formatDate(analytics.worst_mood_day) ?? "No data"}</strong>
             </div>
           </div>
           
@@ -615,7 +620,7 @@ function App() {
       )}
       {editing && (
         <div className="edit-form">
-          <h2>Edit entry: {editing.date}</h2>
+          <h2>Edit entry: {formatDate(editing.date)}</h2>
 
           <div className="form-grid">
             <div className="field">
@@ -740,7 +745,7 @@ function App() {
             <button onClick={() => startEdit(entry)}>Edit</button>
             <button onClick={() => deleteEntry(entry.id)}>Delete</button>
           </div>
-          <p><b>Date:</b> {entry.date}</p>
+          <p><b>Date:</b> {formatDate(entry.date)}</p>
           <p><b>Sleep:</b> {entry.sleep_hours}</p>
           <p><b>Mood:</b> {entry.mood}</p>
           <p><b>Energy:</b> {entry.energy}</p>
