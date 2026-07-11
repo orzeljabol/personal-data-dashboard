@@ -75,6 +75,46 @@ function App() {
     const [year, month, day] = dateString.split("-");
     return `${day}.${month}.${year}`;
   }
+  function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+  async function applyDatePreset(days) {
+    const endDate = new Date();
+    const startDate = new Date();
+
+    startDate.setDate(endDate.getDate() - (days - 1));
+
+    const presetFilters = {
+      start_date: formatDateForInput(startDate),
+      end_date: formatDateForInput(endDate),
+    };
+
+    setFilters(presetFilters);
+
+    await loadEntries(presetFilters);
+
+    if (showAnalytics) {
+      await loadAnalytics(presetFilters);
+    }
+  }
+  async function applyAllTimePreset() {
+    const emptyFilters = {
+      start_date: "",
+      end_date: "",
+    };
+
+    setFilters(emptyFilters);
+
+    await loadEntries(emptyFilters);
+
+    if (showAnalytics) {
+      await loadAnalytics(emptyFilters);
+    }
+  }
   async function applyFilters() {
     await loadEntries(filters);
     if (showAnalytics) {
@@ -396,10 +436,37 @@ function App() {
       {showFilters && (
         <div className="filters-card">
           <div className="filters-header">
-            <h2>Filter entries</h2>
-            <p>Select a date range to view specific entries.</p>
+            <div>
+                <h2>Filter entries</h2>
+                <p>Select a date range to view specific entries.</p>
+            </div>
+            <button 
+            type="button"
+            className="panel-close-button" 
+            onClick={() => setShowFilters(false)}
+            aria-label="Close filters"
+            title="Close filters"
+            >
+              ×
+            </button>
           </div>
+          <div className="filter-presets">
+            <button type="button" onClick={() => applyDatePreset(7)}>
+              7 days
+            </button>
 
+            <button type="button" onClick={() => applyDatePreset(30)}>
+              30 days
+            </button>
+
+            <button type="button" onClick={() => applyDatePreset(90)}>
+              90 days
+            </button>
+
+            <button type="button" onClick={applyAllTimePreset}>
+              All time
+            </button>
+          </div>
           <div className="filters-grid">
             <div className="filter-field">
               <label>Start date</label>
@@ -441,15 +508,26 @@ function App() {
       {showAnalytics && analytics && (
         <div className="analytics-card">
           <div className="analytics-header">
-            <h2>
-              <span className="section-icon" aria-hidden="true">✦</span>
-              Analytics
-            </h2>
-            <p>
-              {analytics.start_date || analytics.end_date
-                ? `From ${formatDate(analytics.start_date)} to ${formatDate(analytics.end_date)}`
-                : "All time"}
-            </p>
+            <div>
+              <h2>
+                <span className="section-icon" aria-hidden="true">✦</span>
+                Analytics
+              </h2>
+              <p>
+                {analytics.start_date || analytics.end_date
+                  ? `From ${formatDate(analytics.start_date)} to ${formatDate(analytics.end_date)}`
+                  : "All time"}
+              </p>
+            </div>
+            <button 
+              type="button"
+              className="panel-close-button" 
+              onClick={() => setShowAnalytics(false)}
+              aria-label="Close Analytics"
+              title="Close analytics"
+            >
+              ×
+            </button>       
           </div>
           <div className="analytics-grid">
             <div className="analytics-item">
@@ -514,7 +592,20 @@ function App() {
       )}
 
       {showForm && (<div className="entry-form">
-      <h2>New Entry</h2>
+      <div className="form-header">
+        <div>
+          <h2>New Entry</h2>
+        </div>
+        <button 
+          type="button"
+          className="panel-close-button" 
+          onClick={() => setShowForm(false)}
+          aria-label="Close form"
+          title="Close form"
+        >
+          ×
+        </button>
+      </div>
       <div className="row">
         <input
           type="date"
