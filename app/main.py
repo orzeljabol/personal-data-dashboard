@@ -3,7 +3,7 @@ from app.db import engine, get_db
 from app.models import Base, DailyEntry
 from app.schemas import DailyEntryCreate, DailyEntryRead, DailyEntryEdit, Summary7Days, AnalyticsSummary
 from sqlalchemy.orm import Session
-from datetime import date, datetime, timedelta
+from datetime import date
 import app.services as services
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
