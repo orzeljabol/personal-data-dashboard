@@ -1,6 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.models import Base
+from app.db import get_db
+from app.main import app
+from fastapi.testclient import TestClient
+
 
 import pytest
 
@@ -20,3 +24,14 @@ def db_session():
         yield test_db
     finally:
         test_db.close()
+@pytest.fixture
+def client(db_session):
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    with TestClient(app) as test_client:
+        yield test_client
+
+    app.dependency_overrides.clear()
