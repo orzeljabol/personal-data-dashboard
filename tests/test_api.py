@@ -107,10 +107,17 @@ def test_get_entries_returns_multiple_entries_in_descending_date_order(client):
     oldest_entry = data[1]
     
     
-    assert newest_entry["date"] == "2026-07-20"
-    assert newest_entry["mood"] == 5
-    assert newest_entry["energy"] == 6
+    assert oldest_entry["date"] == "2026-07-20"
+    assert oldest_entry["mood"] == 5
+    assert oldest_entry["energy"] == 6
     
-    assert oldest_entry["date"] == "2026-07-21"
-    assert oldest_entry["mood"] == 7
-    assert oldest_entry["energy"] == 8
+    assert newest_entry["date"] == "2026-07-21"
+    assert newest_entry["mood"] == 7
+    assert newest_entry["energy"] == 8
+
+    analytics_response = client.get("/api/analytics")
+    assert analytics_response.status_code == 200
+    data = analytics_response.json()
+    assert data["average_mood"] == 6
+    assert data["average_energy"] == 7
+    assert data["tracked_days"] == 2
